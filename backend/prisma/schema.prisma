@@ -1,0 +1,347 @@
+// Career Track - Prisma schema
+// Maps the ERD (Section 2) + Design Decisions (Section 3) of the spec.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["omitApi"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ Enums ============
+
+enum Role {
+  ADMIN
+  STUDENT
+  PLACEMENT_HEAD
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum StudentStatus {
+  ADMITTED
+  ACTIVE
+  ON_PLACEMENT
+  GRADUATED
+  ALUMNI
+}
+
+enum GraduationStatus {
+  IN_PROGRESS
+  GRADUATED
+}
+
+enum ResultStatus {
+  PASS
+  FAIL
+}
+
+enum PlacementStatus {
+  APPLIED
+  IN_PROGRESS
+  SELECTED
+  REJECTED
+  OFFER_RECEIVED
+}
+
+enum RoundType {
+  APPLICATION
+  APTITUDE
+  TECHNICAL
+  INTERVIEW_HR
+}
+
+enum RoundResult {
+  PENDING
+  PASS
+  FAIL
+  SELECTED
+  REJECTED
+}
+
+// ============ User ============
+
+model User {
+  id               Int           @id @default(autoincrement())
+  firstName        String        @map("first_name") @db.VarChar(50)
+  middleName       String?       @map("middle_name") @db.VarChar(50)
+  lastName         String        @map("last_name") @db.VarChar(50)
+  email            String        @unique @db.VarChar(100)
+  phone            String?       @map("phone") @db.VarChar(15)
+  passwordHash     String        @map("password_hash") @db.VarChar(255)
+  role             Role          @default(STUDENT)
+  accountStatus    AccountStatus @default(ACTIVE) @map("account_status")
+  studentId        Int?          @unique @map("student_student_id")
+  student          Student?      @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  @@map("User")
+}
+
+// ============ Course ============
+
+model Course {
+  id             Int      @id @default(autoincrement())
+  courseCode     String   @unique @map("course_code") @db.VarChar(20)
+  courseName     String   @map("course_name") @db.VarChar(100)
+  department     String   @db.VarChar(100)
+  degree         String   @db.VarChar(50)
+  durationYears  Int      @map("duration_years")
+  totalSemesters Int      @map("total_semester")
+  students       Student[]
+
+  @@map("Course")
+}
+
+// ============ Student ============
+
+model Student {
+  id               Int               @id @default(autoincrement())
+  firstName        String            @map("first_name") @db.VarChar(50)
+  middleName       String?           @map("middle_name") @db.VarChar(50)
+  lastName         String            @map("last_name") @db.VarChar(50)
+  dateOfBirth      DateTime?         @map("date_of_birth") @db.Date
+  gender           String?           @db.VarChar(45)
+  enrollmentNo     String            @unique @map("enrollment_no") @db.VarChar(30)
+  rollNumber       String            @unique @map("roll_number") @db.VarChar(15)
+  admissionNo      String            @unique @map("admission_no") @db.VarChar(30)
+  admissionYear    Int               @map("admission_year")
+  expectedYear     Int               @map("expected_passing_year")
+  currentSemester  Int               @map("current_semester")
+  currentStatus    StudentStatus     @default(ADMITTED) @map("current_status")
+  graduationStatus GraduationStatus  @default(IN_PROGRESS) @map("graduation_status")
+  accountStatus    AccountStatus     @default(ACTIVE) @map("account_status")
+  address          String?           @db.VarChar(255)
+  courseId         Int               @map("course_couse_id")
+  course           Course            @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  user             User?
+  academicRecords  AcademicRecord[]
+  backlogs         Backlog[]
+  skills           StudentSkill[]
+  certifications   Certification[]
+  projects         Project[]
+  internships      Internship[]
+  placements       Placement[]
+  careerHistory    CareerHistory[]
+  alumniFeedback   AlumniFeedback[]
+
+  @@index([courseId])
+  @@map("Student")
+}
+
+// ============ Academic Record ============
+
+model AcademicRecord {
+  id          Int          @id @default(autoincrement())
+  semester    Int          @db.SmallInt
+  academicYear Int         @map("academic_year")
+  sgpa        Decimal      @db.Decimal(4, 2)
+  cgpa        Decimal      @db.Decimal(4, 2)
+  creditsEarned Decimal    @map("credits_earn") @db.Decimal(5, 2)
+  totalCredits Decimal     @map("total_credit") @db.Decimal(5, 2)
+  resultStatus ResultStatus @map("result_stauts")
+  studentId    Int          @map("student_student_id")
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@map("Academic_record")
+}
+
+// ============ Backlog ============
+
+model Backlog {
+  id            Int      @id @default(autoincrement())
+  attemptedNo   Int      @map("attempted_no")
+  semester      Int      @db.SmallInt
+  subject       String   @db.VarChar(100)
+  status        String   @db.VarChar(45)
+  clearedDate   DateTime? @map("cleared_date") @db.Date
+  attemptedAgain Boolean  @default(false) @map("attempted_again")
+  studentId     Int      @map("student_student_id")
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@map("Backlog")
+}
+
+// ============ Skill ============
+
+model Skill {
+  id        Int            @id @default(autoincrement())
+  skillName String         @unique @map("skill_name") @db.VarChar(50)
+  category  String?        @db.VarChar(50)
+  studentSkills StudentSkill[]
+
+  @@map("Skill")
+}
+
+// ============ Student Skill (junction) ============
+
+model StudentSkill {
+  studentId Int     @map("student_student_id")
+  skillId   Int     @map("skill_skill_id")
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  skill     Skill   @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@id([studentId, skillId])
+  @@map("Student_skill")
+}
+
+// ============ Certification ============
+
+model Certification {
+  id              Int      @id @default(autoincrement())
+  certificationName String @map("certification_name") @db.VarChar(150)
+  issuingOrganisation String @map("issuing_organisation") @db.VarChar(150)
+  issuingDate     DateTime @map("issuing_date") @db.Date
+  expiryDate      DateTime? @map("expiry_date") @db.Date
+  certificationUrl String? @map("certification_url") @db.VarChar(500)
+  studentId       Int      @map("student_student_id")
+  student         Student  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@map("Certification")
+}
+
+// ============ Project ============
+
+model Project {
+  id            Int      @id @default(autoincrement())
+  projectTitle  String   @map("project_title") @db.VarChar(150)
+  description   String?  @db.Text
+  startDate     DateTime @map("start_date") @db.Date
+  endDate       DateTime? @map("end_date") @db.Date
+  technologyUsed String? @map("technology_used") @db.VarChar(255)
+  projectUrl    String?  @map("project_url") @db.VarChar(500)
+  teamSize      Int      @default(1) @map("team_size")
+  studentId     Int      @map("student_student_id")
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@map("Project")
+}
+
+// ============ Internship ============
+
+model Internship {
+  id            Int      @id @default(autoincrement())
+  companyName   String   @map("company_name") @db.VarChar(150)
+  role          String   @db.VarChar(100)
+  startDate     DateTime @map("start_date") @db.Date
+  endDate       DateTime? @map("end_date") @db.Date
+  stipend       Decimal? @db.Decimal(10, 2)
+  certificateUrl String? @map("certificate_url") @db.VarChar(500)
+  studentId     Int      @map("student_student_id")
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@map("Internship")
+}
+
+// ============ Placement ============
+
+model Placement {
+  id            Int           @id @default(autoincrement())
+  companyName   String        @map("company_name") @db.VarChar(150)
+  jobRole       String        @map("job_role") @db.VarChar(100)
+  placementDate DateTime      @map("placement_date") @db.Date
+  packageLpa    Decimal       @map("package_lpa") @db.Decimal(8, 2)
+  placementStatus PlacementStatus @default(APPLIED) @map("placement_status")
+  location      String?       @db.VarChar(100)
+  studentId     Int           @map("student_student_id")
+  student       Student       @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  rounds        PlacementRound[]
+  offerLetter   OfferLetter?
+
+  @@index([studentId])
+  @@map("Placement")
+}
+
+// ============ Placement Round ============
+
+model PlacementRound {
+  id           Int           @id @default(autoincrement())
+  roundNumber  Int           @map("round_number")
+  roundType    RoundType     @map("round_type")
+  roundDate    DateTime      @map("round_date") @db.Date
+  result       RoundResult   @default(PENDING)
+  remark       String?       @db.Text
+  placementId  Int           @map("placement_placement_id")
+  placement    Placement     @relation(fields: [placementId], references: [id], onDelete: Restrict)
+  feedback     RoundFeedback?
+
+  @@unique([placementId, roundNumber])
+  @@index([placementId])
+  @@map("Placement_round")
+}
+
+// ============ Round Feedback ============
+
+model RoundFeedback {
+  id        Int            @id @default(autoincrement())
+  rating    Int            @db.SmallInt
+  feedbackDate DateTime     @map("feedback_date") @db.Date
+  comments  String?        @db.Text
+  placementRoundId Int     @unique @map("placement_round_placement_round_id")
+  placementRound PlacementRound @relation(fields: [placementRoundId], references: [id], onDelete: Restrict)
+
+  @@map("Round_feedback")
+}
+
+// ============ Offer Letter ============
+
+model OfferLetter {
+  id          Int      @id @default(autoincrement())
+  companyName String   @map("company_name") @db.VarChar(150)
+  packageLpa  Decimal  @map("package_lpa") @db.Decimal(10, 2)
+  offerDate   DateTime @map("offer_date") @db.Date
+  joiningDate DateTime? @map("joining_date") @db.Date
+  designation String?  @db.VarChar(100)
+  location    String?  @db.VarChar(45)
+  documentUrl String?  @map("document_url") @db.VarChar(500)
+  placementId Int     @unique @map("placement_placement_id")
+  placement   Placement @relation(fields: [placementId], references: [id], onDelete: Restrict)
+
+  @@map("Offer_letter")
+}
+
+// ============ Career History ============
+
+model CareerHistory {
+  id          Int      @id @default(autoincrement())
+  companyName String   @map("company_name") @db.VarChar(150)
+  jobTitle    String   @map("job_title") @db.VarChar(100)
+  startDate   DateTime @map("start_date") @db.Date
+  endDate     DateTime? @map("end_date") @db.Date
+  role        String?  @db.VarChar(100)
+  location    String?  @db.VarChar(100)
+  currentJob  Boolean  @default(false) @map("current_job")
+  studentId   Int      @map("student_student_id")
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@map("Carrer_history")
+}
+
+// ============ Alumni Feedback ============
+
+model AlumniFeedback {
+  id           Int      @id @default(autoincrement())
+  rating       Int      @db.SmallInt
+  comment      String?  @db.Text
+  feedback     String?  @db.Text
+  feedbackDate DateTime @map("feedback_date") @db.Date
+  studentId    Int      @map("student_student_id")
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@map("Alumini_feedback")
+}
