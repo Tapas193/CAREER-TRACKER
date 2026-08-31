@@ -90,8 +90,7 @@ const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElem
     <select
       ref={ref}
       className={cn(
-        "field-input appearance-none bg-no-repeat bg-[right_0.5rem_center] pr-8",
-        "bg-[url(\"data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='16'%20height='16'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='%2364748b'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='m6%209%206%206%206-6'/%3E%3C/svg%3E\")]",
+        "field-input pr-8",
         className
       )}
       {...props}
@@ -447,15 +446,33 @@ export function Modal({
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // Hold the latest close handler in a ref so the focus/listener effect below
+  // does NOT re-run on every parent render (onClose is often recreated inline,
+  // e.g. `() => setShow(false)`). Re-running on every keystroke while typing in a
+  // form would steal focus out of the input and could dismiss the modal.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     if (!open) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onCloseRef.current();
     };
     document.addEventListener('keydown', onKey);
     panelRef.current?.focus();
-    return () => document.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      // Return focus to the element that opened the modal so keyboard/tab focus
+      // does not hop to <body> after closing.
+      if (document.activeElement?.tagName === 'BODY') {
+        previouslyFocused?.focus?.();
+      }
+    };
+    // Run only when the modal opens/closes — ignore onClose identity changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   if (!open) return null;
   return (

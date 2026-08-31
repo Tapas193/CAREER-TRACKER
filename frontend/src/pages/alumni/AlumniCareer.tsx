@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useApi } from '../../hooks/useApi';
 import { api } from '../../api/client';
-import { PageHeader, Card, Button, Input, DataTable, Loading, Modal, FormField, Badge, ConfirmDialog, ActionMenu, Toast, type MenuItem } from '../../components/ui';
-import { Plus, Trash2 } from 'lucide-react';
+import { PageHeader, Card, Button, Input, Loading, Modal, FormField, Badge, ConfirmDialog, Toast, EmptyState } from '../../components/ui';
+import { Plus, Trash2, Briefcase, MapPin } from 'lucide-react';
 import { formatDate, asArray } from '../../utils/cn';
 import type { CareerHistory } from '../../types';
 
@@ -16,7 +16,7 @@ export default function AlumniCareer() {
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CareerHistory | null>(null);
 
-  const items = asArray<any>(data);
+  const items = asArray<any>(data).sort((a, b) => new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime());
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,47 +55,55 @@ export default function AlumniCareer() {
     setSaving(false);
   };
 
-  const actionsFor = (c: any): MenuItem[] => [
-    { label: 'Remove', icon: <Trash2 className="h-4 w-4" />, destructive: true, onClick: () => setDeleteTarget(c) },
-  ];
-
   return (
     <div>
       {msg && <Toast message={msg} type={msg.toLowerCase().includes('error') ? 'error' : 'success'} onClose={() => setMsg('')} />}
       <PageHeader
         title="Career History"
-        subtitle="Add jobs you've held after graduation"
+        subtitle="Your professional journey since graduation"
         action={<Button onClick={() => setShowForm(true)}><Plus className="h-4 w-4" />Add Job</Button>}
       />
 
       {isLoading && !items.length && <Loading label="Loading career history…" />}
 
       {(!isLoading || items.length > 0) && (
-        <Card>
-          <DataTable
-            columns={[
-              {
-                header: 'Company',
-                render: (c: any) => (
-                  <span className="font-medium text-foreground">
-                    {c.companyName} {c.currentJob && <Badge tone="green" className="ml-1.5">Current</Badge>}
+        <Card className="p-5">
+          {items.length === 0 ? (
+            <EmptyState title="No career entries" message="Add your first post-graduation job to start your timeline." />
+          ) : (
+            <div className="relative ml-2 border-l-2 border-border pl-6">
+              {items.map((c) => (
+                <div key={c.id} className="relative pb-7 last:pb-0">
+                  <span className="absolute -left-[34px] flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary ring-4 ring-background">
+                    <Briefcase className="h-3 w-3" />
                   </span>
-                ),
-              },
-              { header: 'Role', render: (c: any) => c.jobTitle },
-              { header: 'Location', render: (c: any) => c.location ?? '—' },
-              { header: 'From', render: (c: any) => formatDate(c.startDate) },
-              { header: 'To', render: (c: any) => (c.endDate ? formatDate(c.endDate) : 'Present') },
-              {
-                header: '',
-                className: 'text-right',
-                render: (c: any) => <ActionMenu a11yLabel={`Actions for ${c.companyName} entry`} items={actionsFor(c)} />,
-              },
-            ]}
-            data={items}
-            emptyTitle="No career entries"
-            emptyMessage="Add your first post-graduation job."
-          />
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        {c.companyName}
+                        {c.currentJob && <Badge tone="green" className="ml-2">Current</Badge>}
+                      </p>
+                      <p className="mt-0.5 text-sm text-muted-foreground">{c.jobTitle}{c.role ? ` · ${c.role}` : ''}</p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span>{formatDate(c.startDate)} — {c.endDate ? formatDate(c.endDate) : 'Present'}</span>
+                        {c.location && (
+                          <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{c.location}</span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(c)}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                      aria-label={`Remove career entry at ${c.companyName}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       )}
 

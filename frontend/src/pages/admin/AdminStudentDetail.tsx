@@ -19,7 +19,7 @@ import {
   EmptyState,
   Toast,
 } from '../../components/ui';
-import { ArrowLeft, GraduationCap, UserCheck } from 'lucide-react';
+import { ArrowLeft, GraduationCap, UserCheck, ExternalLink, Download, Mail, Building2, Briefcase, BookOpen, FolderGit2, Award, CircleDot, Trophy, Users } from 'lucide-react';
 import { asArray, formatDate, formatLpa } from '../../utils/cn';
 import type { Student } from '../../types';
 
@@ -118,6 +118,8 @@ export default function AdminStudentDetail() {
     { key: 'offers', label: 'Offers', count: offers.length },
     { key: 'career', label: 'Career History', count: career.length },
     { key: 'feedback', label: 'Alumni Feedback', count: feedbacks.length },
+    { key: 'documents', label: 'Documents' },
+    { key: 'timeline', label: 'Career Timeline' },
   ];
 
   return (
@@ -269,6 +271,8 @@ export default function AdminStudentDetail() {
             emptyMessage="No alumni feedback submitted."
           />
         )}
+        {tab === 'documents' && <DocumentsView student={student} />}
+        {tab === 'timeline' && <TimelineView student={student} />}
       </div>
 
       <ConfirmDialog
@@ -331,6 +335,16 @@ function Overview({ student }: { student: any }) {
             <DetailItem label="Address" value={student.address} className="sm:col-span-2 md:col-span-3" />
           </DetailGrid>
         </CardContent>
+      </Card>
+
+      <Card className="mb-4 px-5 py-4">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Profile completion</span>
+          <span className="text-sm font-semibold tabular-nums text-foreground">{profileCompletion(student)}%</span>
+        </div>
+        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${profileCompletion(student)}%` }} />
+        </div>
       </Card>
 
       <Card>
@@ -432,4 +446,97 @@ function PlacementsList({ items }: { items: PlacementLike[] }) {
       ))}
     </div>
   );
+}
+
+function DocumentsView({ student }: { student: any }) {
+  const docs = [
+    ...asArray<any>(student.certifications).map((c) => ({ id: `cert-${c.id}`, kind: 'Certification', title: c.certificationName, subtitle: c.issuingOrganisation, url: c.certificationUrl })),
+    ...asArray<any>(student.internships).map((i) => ({ id: `intern-${i.id}`, kind: 'Internship', title: `Internship — ${i.companyName}`, subtitle: i.role, url: i.certificateUrl })),
+    ...asArray<any>(student.placements)
+      .filter((p) => p.offerLetter?.documentUrl)
+      .map((p) => ({ id: `offer-${p.id}`, kind: 'Offer Letter', title: `Offer — ${p.companyName}`, subtitle: p.jobRole, url: p.offerLetter.documentUrl })),
+  ].filter((d) => d.url);
+
+  return (
+    <DataTable
+      columns={[
+        { header: 'Type', render: (d: any) => <StatusBadge status={d.kind} /> },
+        { header: 'Title', render: (d: any) => <span className="font-medium">{d.title}</span> },
+        { header: 'Detail', render: (d: any) => d.subtitle ?? '—' },
+        {
+          header: 'Action',
+          render: (d: any) => (
+            <div className="flex gap-2">
+              <a href={d.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"><ExternalLink className="h-3.5 w-3.5" />View</a>
+              <a href={d.url} download className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:underline"><Download className="h-3.5 w-3.5" />Download</a>
+            </div>
+          ),
+        },
+      ]}
+      data={docs}
+      emptyTitle="No documents"
+      emptyMessage="No certification, internship or offer documents with attached files."
+    />
+  );
+}
+
+function TimelineView({ student }: { student: any }) {
+  const events: any[] = [
+    { type: 'Admission', title: `Admitted to ${student.course?.courseName || 'program'}`, date: String(student.admissionYear || ''), icon: Users },
+    ...asArray<any>(student.academicRecords).map((r) => ({ type: 'Academic', title: `Semester ${r.semester}`, subtitle: `SGPA ${Number(r.sgpa).toFixed(2)} · CGPA ${Number(r.cgpa).toFixed(2)}`, date: String(r.academicYear || ''), icon: BookOpen })),
+    ...asArray<any>(student.skills).map((s) => ({ type: 'Skill', title: `Skill: ${s.skill?.skillName || ''}`, date: '', icon: Award })),
+    ...asArray<any>(student.certifications).map((c) => ({ type: 'Certification', title: c.certificationName, date: c.issuingDate ? formatDate(c.issuingDate) : '', icon: Award })),
+    ...asArray<any>(student.projects).map((p) => ({ type: 'Project', title: p.projectTitle, date: p.startDate ? formatDate(p.startDate) : '', icon: FolderGit2 })),
+    ...asArray<any>(student.internships).map((i) => ({ type: 'Internship', title: `${i.role} at ${i.companyName}`, date: i.startDate ? formatDate(i.startDate) : '', icon: Building2 })),
+    ...asArray<any>(student.placements).flatMap((p) => [
+      { type: 'Drive', title: `Applied ${p.jobRole} at ${p.companyName}`, date: p.placementDate ? formatDate(p.placementDate) : '', icon: Briefcase },
+      ...asArray<any>(p.rounds).map((r) => ({ type: 'Round', title: `${r.roundType} round`, subtitle: `Result: ${r.result}`, date: r.roundDate ? formatDate(r.roundDate) : '', icon: CircleDot })),
+      ...(p.offerLetter ? [{ type: 'Offer', title: `Offer from ${p.companyName}`, subtitle: formatLpa(p.offerLetter.packageLpa), date: p.offerLetter.offerDate ? formatDate(p.offerLetter.offerDate) : '', icon: Trophy }] : []),
+    ]),
+    ...(student.graduationStatus === 'GRADUATED' ? [{ type: 'Graduation', title: 'Graduated', date: String(student.expectedYear || ''), icon: GraduationCap }] : []),
+    ...asArray<any>(student.careerHistory).map((c) => ({ type: 'Career', title: `${c.jobTitle} at ${c.companyName}`, date: c.startDate ? formatDate(c.startDate) : '', icon: Mail })),
+  ].sort((a, b) => {
+    const at = !a.date ? 0 : new Date(a.date).getTime();
+    const bt = !b.date ? 0 : new Date(b.date).getTime();
+    return at - bt;
+  });
+
+  if (!events.length) return <Card><EmptyState title="No timeline" message="No records available." /></Card>;
+
+  return (
+    <Card className="p-5">
+      <div className="relative ml-2 border-l-2 border-border pl-6">
+        {events.map((ev, i) => {
+          const Icon = ev.icon;
+          return (
+            <div key={i} className="relative pb-5 last:pb-0">
+              <span className="absolute -left-[38px] flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary ring-4 ring-background">
+                <Icon className="h-3.5 w-3.5" />
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge tone="blue">{ev.type}</Badge>
+                <span className="text-sm font-semibold text-foreground">{ev.title}</span>
+                {ev.date && <span className="text-xs text-muted-foreground">{ev.date}</span>}
+              </div>
+              {ev.subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{ev.subtitle}</p>}
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
+function profileCompletion(student: any): number {
+  const fields = [
+    !!(student.courseId),
+    asArray<any>(student.academicRecords).length > 0,
+    asArray<any>(student.skills).length > 0,
+    asArray<any>(student.certifications).length > 0,
+    asArray<any>(student.projects).length > 0,
+    asArray<any>(student.internships).length > 0,
+    !!(student.address || student.gender),
+  ];
+  const filled = fields.filter(Boolean).length;
+  return Math.round((filled / fields.length) * 100);
 }

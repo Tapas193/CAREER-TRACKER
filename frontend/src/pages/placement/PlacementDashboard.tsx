@@ -1,7 +1,8 @@
 import { useApi } from '../../hooks/useApi';
 import { PageHeader, StatCard, Card, CardHeader, CardContent, Loading } from '../../components/ui';
+import { Link } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Users, UserCheck, Briefcase, TrendingUp, Banknote, Trophy, Activity, CalendarDays } from 'lucide-react';
+import { Users, UserCheck, Briefcase, TrendingUp, Banknote, Trophy, Activity, CalendarDays, GitBranch, LayoutGrid } from 'lucide-react';
 
 interface PlacementDashboardData {
   eligibleCount: number;
@@ -26,6 +27,14 @@ export default function PlacementDashboard() {
   return (
     <div>
       <PageHeader title="Placement Dashboard" subtitle="Placement cell analytics" />
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Link to="/placement/drives" className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"><CalendarDays className="h-3.5 w-3.5" />Drives</Link>
+        <Link to="/placement/drive-detail" className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"><Briefcase className="h-3.5 w-3.5" />Drive Detail</Link>
+        <Link to="/placement/pipeline" className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"><GitBranch className="h-3.5 w-3.5" />Pipeline</Link>
+        <Link to="/placement/student-profiles" className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"><LayoutGrid className="h-3.5 w-3.5" />Student Profiles</Link>
+        <Link to="/placement/reports" className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"><TrendingUp className="h-3.5 w-3.5" />Reports</Link>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Eligible" value={data.eligibleCount} icon={<Users className="h-4 w-4" />} />
