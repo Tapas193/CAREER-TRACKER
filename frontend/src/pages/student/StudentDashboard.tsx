@@ -4,6 +4,11 @@ import { GraduationCap, Briefcase, Award, FolderGit2, Building2, Users, AlertTri
 import { Link } from 'react-router-dom';
 import { asArray, formatDate, formatLpa } from '../../utils/cn';
 import { careerProfilePercent } from '../../utils/career';
+import { computeReadiness } from '../../utils/intelligence/readiness';
+import { assessRisk } from '../../utils/intelligence/risk';
+import { computeXp, loadXpActivity } from '../../utils/intelligence/xp';
+import { ScoreRing } from '../../components/intelligence';
+import { Radar } from 'lucide-react';
 
 const QUICK_ACTIONS = [
   { to: '/student/profile', label: 'Update Profile', icon: User },
@@ -37,6 +42,10 @@ export default function StudentDashboard() {
 
   const placementStatus = placements[placements.length - 1]?.placementStatus ?? 'NONE';
 
+  const readiness = computeReadiness(me);
+  const risk = assessRisk(me);
+  const xp = computeXp(me, loadXpActivity());
+
   const cards = [
     { label: 'Current CGPA', value: latest ? Number(latest.cgpa).toFixed(2) : '—', icon: GraduationCap },
     { label: 'Completed Credits', value: creditsEarned, icon: CheckCircle2 },
@@ -64,7 +73,7 @@ export default function StudentDashboard() {
         subtitle="Track your academic progress and build your career journey."
       />
 
-      <div className="mb-5 flex items-center gap-3 rounded-lg border border-border bg-card px-5 py-4">
+      <div className="mb-5 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card px-5 py-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground"><User className="h-5 w-5" /></div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-foreground">{name}{course ? ` · ${course}` : ''}</p>
@@ -79,7 +88,7 @@ export default function StudentDashboard() {
         ))}
       </div>
 
-      <div className="mb-5 grid gap-4 lg:grid-cols-3">
+      <div className="mb-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Card>
           <CardHeader title={<span className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Academic Progress</span>} />
           <CardContent>
@@ -94,16 +103,18 @@ export default function StudentDashboard() {
         </Card>
 
         <Card>
-          <CardHeader title={<span className="flex items-center gap-2"><Briefcase className="h-4 w-4 text-primary" /> Career Readiness</span>} />
+          <CardHeader title={<span className="flex items-center gap-2"><Radar className="h-4 w-4 text-primary" /> Career Intelligence</span>} />
           <CardContent>
-            <ul className="space-y-2 text-sm">
-              <li className="flex justify-between"><span className="text-muted-foreground">Skills</span><span className="font-semibold tabular-nums">{skills.length}</span></li>
-              <li className="flex justify-between"><span className="text-muted-foreground">Certifications</span><span className="font-semibold tabular-nums">{certifications.length}</span></li>
-              <li className="flex justify-between"><span className="text-muted-foreground">Projects</span><span className="font-semibold tabular-nums">{projects.length}</span></li>
-              <li className="flex justify-between"><span className="text-muted-foreground">Internship Experience</span><span className="font-semibold tabular-nums">{internships.length}</span></li>
-              <li className="flex justify-between"><span className="text-muted-foreground">Placement Readiness</span><span className="font-semibold tabular-nums">{careerProfilePercent(me)}%</span></li>
-            </ul>
-            <Link to="/student/placement-preparation" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">View preparation <ArrowRight className="h-3.5 w-3.5" /></Link>
+            <div className="flex items-center gap-4">
+              <ScoreRing value={readiness.overall} label="readiness" color={readiness.overall >= 70 ? 'green' : readiness.overall >= 50 ? 'blue' : readiness.overall >= 30 ? 'amber' : 'red'} size={96} thickness={8} />
+              <ul className="flex-1 space-y-2 text-sm">
+                <li className="flex justify-between"><span className="text-muted-foreground">At-risk level</span><span className="font-semibold">{risk.level}</span></li>
+                <li className="flex justify-between"><span className="text-muted-foreground">Career XP</span><span className="font-semibold tabular-nums">{xp.totalXp} XP</span></li>
+                <li className="flex justify-between"><span className="text-muted-foreground">Level</span><span className="font-semibold">{xp.levelTitle}</span></li>
+                <li className="flex justify-between"><span className="text-muted-foreground">Placement Readiness</span><span className="font-semibold tabular-nums">{careerProfilePercent(me)}%</span></li>
+              </ul>
+            </div>
+            <Link to="/student/readiness" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">Open intelligence hub <ArrowRight className="h-3.5 w-3.5" /></Link>
           </CardContent>
         </Card>
 

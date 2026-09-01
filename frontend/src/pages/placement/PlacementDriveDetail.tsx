@@ -111,7 +111,7 @@ export default function PlacementDriveDetail() {
                               {isOpen && (
                                 <div className="border-t border-border px-5 py-4">
                                   {rounds.length > 0 && (
-                                    <div className="mb-4 overflow-hidden rounded-md border border-border">
+                                    <div className="mb-4 overflow-x-auto rounded-md border border-border">
                                       <table className="w-full text-sm">
                                         <thead className="border-b border-border bg-muted/60 text-left text-xs text-muted-foreground">
                                           <tr>

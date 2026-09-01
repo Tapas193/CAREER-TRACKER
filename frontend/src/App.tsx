@@ -43,6 +43,19 @@ const StudentPlacements = lazy(() => import('./pages/student/StudentPlacements')
 const StudentDocumentCenter = lazy(() => import('./pages/student/StudentDocumentCenter'));
 const StudentPlacementTracker = lazy(() => import('./pages/student/StudentPlacementTracker'));
 const StudentCareerTimeline = lazy(() => import('./pages/student/StudentCareerTimeline'));
+const StudentReadiness = lazy(() => import('./pages/student/StudentReadiness'));
+const StudentResumeAnalyzer = lazy(() => import('./pages/student/StudentResumeAnalyzer'));
+const StudentRoadmap = lazy(() => import('./pages/student/StudentRoadmap'));
+const StudentCompanies = lazy(() => import('./pages/student/StudentCompanies'));
+const StudentAnalytics = lazy(() => import('./pages/student/StudentAnalytics'));
+const StudentRiskOverview = lazy(() => import('./pages/student/StudentRiskOverview'));
+const StudentMentors = lazy(() => import('./pages/student/StudentMentors'));
+const StudentMockInterviews = lazy(() => import('./pages/student/StudentMockInterviews'));
+const StudentSkillGap = lazy(() => import('./pages/student/StudentSkillGap'));
+const StudentCareerXp = lazy(() => import('./pages/student/StudentCareerXp'));
+const StudentAlumniNetwork = lazy(() => import('./pages/student/StudentAlumniNetwork'));
+const StudentInternshipHub = lazy(() => import('./pages/student/StudentInternshipHub'));
+const StudentLearning = lazy(() => import('./pages/student/StudentLearning'));
 const AlumniDashboard = lazy(() => import('./pages/alumni/AlumniDashboard'));
 const AlumniProfile = lazy(() => import('./pages/alumni/AlumniProfile'));
 const AlumniCareer = lazy(() => import('./pages/alumni/AlumniCareer'));
@@ -140,6 +153,19 @@ export default function App() {
           <Route path="/student/tracker" element={<RoleGate panel="student"><StudentPlacementTracker /></RoleGate>} />
           <Route path="/student/documents" element={<RoleGate panel="student"><StudentDocumentCenter /></RoleGate>} />
           <Route path="/student/timeline" element={<RoleGate panel="student"><StudentCareerTimeline /></RoleGate>} />
+          <Route path="/student/readiness" element={<RoleGate panel="student"><StudentReadiness /></RoleGate>} />
+          <Route path="/student/resume-analyzer" element={<RoleGate panel="student"><StudentResumeAnalyzer /></RoleGate>} />
+          <Route path="/student/roadmap" element={<RoleGate panel="student"><StudentRoadmap /></RoleGate>} />
+          <Route path="/student/companies" element={<RoleGate panel="student"><StudentCompanies /></RoleGate>} />
+          <Route path="/student/analytics" element={<RoleGate panel="student"><StudentAnalytics /></RoleGate>} />
+          <Route path="/student/at-risk" element={<RoleGate panel="student"><StudentRiskOverview /></RoleGate>} />
+          <Route path="/student/mentors" element={<RoleGate panel="student"><StudentMentors /></RoleGate>} />
+          <Route path="/student/mock-interviews" element={<RoleGate panel="student"><StudentMockInterviews /></RoleGate>} />
+          <Route path="/student/skill-gap" element={<RoleGate panel="student"><StudentSkillGap /></RoleGate>} />
+          <Route path="/student/career-xp" element={<RoleGate panel="student"><StudentCareerXp /></RoleGate>} />
+          <Route path="/student/alumni-network" element={<RoleGate panel="student"><StudentAlumniNetwork /></RoleGate>} />
+          <Route path="/student/internship-hub" element={<RoleGate panel="student"><StudentInternshipHub /></RoleGate>} />
+          <Route path="/student/learning" element={<RoleGate panel="student"><StudentLearning /></RoleGate>} />
           <Route path="/alumni" element={<RoleGate panel="alumni"><AlumniDashboard /></RoleGate>} />
           <Route path="/alumni/profile" element={<RoleGate panel="alumni"><AlumniProfile /></RoleGate>} />
           <Route path="/alumni/career" element={<RoleGate panel="alumni"><AlumniCareer /></RoleGate>} />

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Award,
@@ -13,17 +13,24 @@ import {
   ClipboardList,
   FileText,
   FolderKanban,
+  Gauge,
   GitBranch,
   GraduationCap,
   HelpCircle,
   LayoutDashboard,
+  Lightbulb,
   ListChecks,
   LogOut,
   Medal,
   Menu,
+  Microscope,
   MessagesSquare,
   Search,
+  ShieldAlert,
+  Sparkles,
   Target,
+  TrendingUp,
+  Trophy,
   User,
   Users,
 } from 'lucide-react';
@@ -105,6 +112,24 @@ const NAV: Record<Panel, NavGroup[]> = {
       ],
     },
     {
+      title: 'Intelligence',
+      items: [
+        { to: '/student/readiness', label: 'Career Readiness', icon: Gauge },
+        { to: '/student/resume-analyzer', label: 'Resume Analyzer', icon: FileText },
+        { to: '/student/roadmap', label: 'Career Roadmap', icon: BarChart3 },
+        { to: '/student/companies', label: 'Companies', icon: Building2 },
+        { to: '/student/analytics', label: 'Placement Analytics', icon: TrendingUp },
+        { to: '/student/at-risk', label: 'At-Risk Overview', icon: ShieldAlert },
+        { to: '/student/mentors', label: 'Mentors', icon: Users },
+        { to: '/student/mock-interviews', label: 'Mock Interviews', icon: Microscope },
+        { to: '/student/skill-gap', label: 'Skill Gap', icon: Target },
+        { to: '/student/career-xp', label: 'Career XP', icon: Trophy },
+        { to: '/student/alumni-network', label: 'Alumni Network', icon: Sparkles },
+        { to: '/student/internship-hub', label: 'Internship Hub', icon: Briefcase },
+        { to: '/student/learning', label: 'Learning', icon: Lightbulb },
+      ],
+    },
+    {
       title: 'Documents',
       items: [{ to: '/student/documents', label: 'Document Center', icon: FolderKanban }],
     },
@@ -178,6 +203,19 @@ const CRUMBS: Record<string, { label: string; to?: string }[]> = {
   '/student/placement-preparation': [{ label: 'Student', to: '/student' }, { label: 'Placement Preparation' }],
   '/student/documents': [{ label: 'Student', to: '/student' }, { label: 'Document Center' }],
   '/student/timeline': [{ label: 'Student', to: '/student' }, { label: 'Career Timeline' }],
+  '/student/readiness': [{ label: 'Student', to: '/student' }, { label: 'Career Readiness' }],
+  '/student/resume-analyzer': [{ label: 'Student', to: '/student' }, { label: 'Resume Analyzer' }],
+  '/student/roadmap': [{ label: 'Student', to: '/student' }, { label: 'Career Roadmap' }],
+  '/student/companies': [{ label: 'Student', to: '/student' }, { label: 'Company Recommendations' }],
+  '/student/analytics': [{ label: 'Student', to: '/student' }, { label: 'Placement Analytics' }],
+  '/student/at-risk': [{ label: 'Student', to: '/student' }, { label: 'At-Risk Overview' }],
+  '/student/mentors': [{ label: 'Student', to: '/student' }, { label: 'Mentor System' }],
+  '/student/mock-interviews': [{ label: 'Student', to: '/student' }, { label: 'Mock Interviews' }],
+  '/student/skill-gap': [{ label: 'Student', to: '/student' }, { label: 'Skill Gap Analysis' }],
+  '/student/career-xp': [{ label: 'Student', to: '/student' }, { label: 'Career XP' }],
+  '/student/alumni-network': [{ label: 'Student', to: '/student' }, { label: 'Alumni Network' }],
+  '/student/internship-hub': [{ label: 'Student', to: '/student' }, { label: 'Internship Hub' }],
+  '/student/learning': [{ label: 'Student', to: '/student' }, { label: 'Learning Recommendations' }],
   '/student/notifications': [{ label: 'Student', to: '/student' }, { label: 'Notifications' }],
   '/student/support': [{ label: 'Student', to: '/student' }, { label: 'Help & Support' }],
   '/alumni': [{ label: 'Alumni', to: '/alumni' }, { label: 'Dashboard' }],
@@ -209,6 +247,27 @@ export default function AppLayout() {
   const panel = user ? panelFor(user) : ('student' as Panel);
   const crumbs = useMemo(() => crumbsFor(location.pathname), [location.pathname]);
   const name = user?.email ?? 'User';
+  const asideRef = useRef<HTMLElement>(null);
+
+  // Close the mobile drawer with Escape and move focus into it when it opens.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    // Defer focus until the drawer is rendered/translated in.
+    const t = window.setTimeout(() => asideRef.current?.focus(), 50);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      window.clearTimeout(t);
+    };
+  }, [mobileOpen]);
+
+  // Close the drawer when the route changes (e.g. back/forward navigation).
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await logout();
@@ -216,16 +275,18 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="app-shell bg-background">
       {mobileOpen && (
         <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setMobileOpen(false)} aria-hidden />
       )}
 
       <aside
+        ref={asideRef}
+        tabIndex={-1}
         className={cn(
-          'fixed inset-y-0 left-0 z-40 flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-200',
+          'fixed inset-y-0 left-0 z-40 flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-200 ease-in-out focus:outline-none lg:static lg:h-screen',
           collapsed ? 'w-16' : 'w-64',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:static'
+          mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
         )}
         aria-label="Sidebar"
       >
@@ -235,8 +296,8 @@ export default function AppLayout() {
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold leading-tight">Career Track</p>
-              <p className="truncate text-[10px] text-white/50">College ERP</p>
+              <p className="truncate text-sm font-semibold leading-tight text-sidebar-foreground">Career Track</p>
+              <p className="truncate text-[10px] text-sidebar-foreground/60">College ERP</p>
             </div>
           )}
         </div>
@@ -245,7 +306,7 @@ export default function AppLayout() {
           {NAV[panel].map((group) => (
             <div key={group.title} className="mb-1">
               {!collapsed && (
-                <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-white/40">{group.title}</p>
+                <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/55">{group.title}</p>
               )}
               <div className="space-y-0.5">
                 {group.items.map((item) => (
@@ -259,10 +320,10 @@ export default function AppLayout() {
         <div className="shrink-0 border-t border-white/10 p-3">
           {!collapsed && (
             <div className="mb-2 flex items-center gap-2.5 rounded-md px-2 py-1.5">
-              <Avatar name={name} className="bg-white/10 text-white" />
+              <Avatar name={name} className="bg-white/15 text-sidebar-foreground" />
               <div className="min-w-0">
-                <p className="truncate text-xs font-medium text-white">{name}</p>
-                <p className="truncate text-[10px] text-white/50">{roleLabel(user!)}</p>
+                <p className="truncate text-xs font-medium text-sidebar-foreground">{name}</p>
+                <p className="truncate text-[10px] text-sidebar-foreground/60">{roleLabel(user!)}</p>
               </div>
             </div>
           )}
@@ -270,7 +331,7 @@ export default function AppLayout() {
             <button
               type="button"
               onClick={() => setCollapsed((v) => !v)}
-              className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white"
+              className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium text-sidebar-foreground/75 focus-visible:ring-2 focus-visible:ring-sidebar-foreground/40 hover:bg-white/10 hover:text-sidebar-foreground"
               aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {collapsed ? <ChevronsRight className="h-4 w-4 shrink-0" /> : <ChevronsLeft className="h-4 w-4 shrink-0" />}
@@ -279,7 +340,7 @@ export default function AppLayout() {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium text-red-300 hover:bg-red-500/10 hover:text-red-200"
+              className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium text-red-300 focus-visible:ring-2 focus-visible:ring-red-400/50 hover:bg-red-500/10 hover:text-red-200"
             >
               <LogOut className="h-4 w-4 shrink-0" />
               {!collapsed && <span>Logout</span>}
@@ -356,16 +417,21 @@ function NavItem({
     <NavLink
       to={to}
       onClick={onNavigate}
+      aria-label={collapsed ? label : undefined}
+      title={collapsed ? label : undefined}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+          'flex min-w-0 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+          'focus-visible:ring-2 focus-visible:ring-primary/60',
           collapsed && 'justify-center px-0',
-          isActive ? 'bg-primary text-primary-foreground' : 'text-white/70 hover:bg-white/10 hover:text-white'
+          isActive
+            ? 'bg-primary text-primary-foreground'
+            : 'text-sidebar-foreground/80 hover:bg-white/10 hover:text-sidebar-foreground'
         )
       }
     >
-      <Icon className="h-[18px] w-[18px] shrink-0" />
-      {!collapsed && <span className="truncate">{label}</span>}
+      <Icon aria-hidden className="h-[18px] w-[18px] shrink-0" />
+      {!collapsed && <span className="min-w-0 truncate">{label}</span>}
     </NavLink>
   );
 }
