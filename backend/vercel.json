@@ -1,11 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npx prisma generate",
-  "functions": {
-    "api/index.ts": {
-      "includeFiles": "prisma/**"
-    }
-  },
+  "buildCommand": "npx prisma generate && npm run build && node scripts/prisma-vercel-strip.mjs",
   "rewrites": [
     {
       "source": "/api/:path*",

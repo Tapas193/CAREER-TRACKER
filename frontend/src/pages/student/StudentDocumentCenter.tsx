@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useApi } from '../../hooks/useApi';
-import { api } from '../../api/client';
+import { API_BASE_URL, api } from '../../api/client';
 import { PageHeader, Card, CardContent, Button, StatusBadge, Loading, Modal, FormField, Input, Select, Toast, EmptyState } from '../../components/ui';
 import { FileText, Upload, ExternalLink, Download, Award, Building2 } from 'lucide-react';
 import { asArray, formatLpa } from '../../utils/cn';
@@ -50,7 +50,7 @@ export default function StudentDocumentCenter() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const uploadRes = await fetch('/api/upload', {
+      const uploadRes = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         credentials: 'include',
         body: fd,

@@ -13,6 +13,7 @@ import { userRepo } from '../repositories/userRepo';
 import { signToken } from '../utils/jwt';
 import { hashPassword } from '../utils/password';
 import { asyncHandler } from '../utils/http';
+import { authCookieOptions } from '../utils/cookies';
 
 const STATE_COOKIE = 'sso_state';
 const STATE_TTL = 10 * 60 * 1000; // 10 minutes
@@ -23,13 +24,11 @@ function redirectUri(req: Request): string {
 }
 
 function setAuthCookie(res: Response, token: string) {
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure: config.cookieSecure,
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: '/',
-  });
+  res.cookie('token', token, authCookieOptions());
+}
+
+function stateCookieOptions() {
+  return { ...authCookieOptions(STATE_TTL), path: '/api/auth/sso/callback' };
 }
 
 export const ssoController = {
@@ -46,13 +45,7 @@ export const ssoController = {
 
     const { state, codeVerifier, codeChallenge } = createSsoSession();
     // State + PKCE verifier stored in an httpOnly cookie; validated on callback.
-    res.cookie(STATE_COOKIE, JSON.stringify({ state, codeVerifier, exp: Date.now() + STATE_TTL }), {
-      httpOnly: true,
-      secure: config.cookieSecure,
-      sameSite: 'lax',
-      maxAge: STATE_TTL,
-      path: '/api/auth/sso/callback',
-    });
+    res.cookie(STATE_COOKIE, JSON.stringify({ state, codeVerifier, exp: Date.now() + STATE_TTL }), stateCookieOptions());
 
     const url = await buildAuthorizationUrl({ state, codeChallenge, redirectUri: redirectUri(req) });
     res.redirect(url);
@@ -76,12 +69,12 @@ export const ssoController = {
     }
 
     if (!session.exp || Date.now() > session.exp || session.state !== state) {
-      res.clearCookie(STATE_COOKIE, { path: '/api/auth/sso/callback' });
+      res.clearCookie(STATE_COOKIE, stateCookieOptions());
       return redirectHome();
     }
 
     try {
-      res.clearCookie(STATE_COOKIE, { path: '/api/auth/sso/callback' });
+      res.clearCookie(STATE_COOKIE, stateCookieOptions());
       const ssoUser = await completeSsoLogin({
         code,
         codeVerifier: session.codeVerifier,

@@ -1,27 +1,21 @@
 import { Request, Response } from 'express';
 import { authService } from '../services/authService';
 import { success, asyncHandler } from '../utils/http';
-import { config } from '../config';
 import { studentRepo } from '../repositories/studentRepo';
+import { authCookieOptions } from '../utils/cookies';
 
 export const authController = {
   login: asyncHandler(async (req: Request, res: Response) => {
     const { email, password } = req.validated;
     const { token, user } = await authService.login({ email, password });
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: config.cookieSecure,
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: '/',
-    });
+    res.cookie('token', token, authCookieOptions());
 
     return success(res, { user }, 'Login successful');
   }),
 
   logout: asyncHandler(async (_req: Request, res: Response) => {
-    res.clearCookie('token', { httpOnly: true, secure: config.cookieSecure, sameSite: 'lax', path: '/' });
+    res.clearCookie('token', authCookieOptions());
     return success(res, null, 'Logged out');
   }),
 

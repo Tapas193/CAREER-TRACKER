@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Loader2, Mail, Lock, Eye, EyeOff, Shield, ArrowRight } from 'lucide-react';
+import { GraduationCap, Loader2, Mail, Lock, Eye, EyeOff, Shield } from 'lucide-react';
 import { Button, Modal } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
+import { API_BASE_URL, ssoApi } from '../api/client';
 
-type SsoStep = 'idle' | 'continuingsso' | 'configuring';
+type SsoStep = 'idle' | 'checking' | 'unconfigured' | 'error';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [ssoStep, setSsoStep] = useState<SsoStep>('idle');
+  const [ssoError, setSsoError] = useState('');
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,13 +37,26 @@ export default function LoginPage() {
     }
   };
 
-  // SSO entry point. When a real OAuth/OIDC/SAML provider is integrated, this
-  // function should redirect to the configured authorization URL. For now it only
-  // advances the in-app informational flow — it never fakes a successful login.
-  const beginSso = () => setSsoStep('continuingsso');
-  const continueSso = () => setSsoStep('configuring');
+  // University SSO entry point: ask the backend whether SSO is configured.
+  // If it is, redirect the browser to the authorization flow. Otherwise show a
+  // clear message and offer the email/password path. We never fake a login.
+  const beginSso = async () => {
+    setSsoError('');
+    setSsoStep('checking');
+    try {
+      const status = await ssoApi.status();
+      if (status?.configured) {
+        window.location.assign(`${API_BASE_URL}/api/auth/sso`);
+        return;
+      }
+      setSsoStep('unconfigured');
+    } catch (err: any) {
+      setSsoError(err?.message ?? 'Unable to check university SSO availability right now.');
+      setSsoStep('error');
+    }
+  };
+
   const closeSso = () => setSsoStep('idle');
-  const ssoEmail = email.trim() || 'student@university.edu';
 
   return (
     <div
@@ -154,9 +169,10 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={beginSso}
-              className="flex !h-12 w-full items-center justify-center gap-2 rounded-md border border-[#E2E8F0] bg-white px-4 text-[15px] font-semibold text-[#0F172A] transition-colors hover:bg-[#EFF6FF]"
+              disabled={ssoStep === 'checking'}
+              className="flex !h-12 w-full items-center justify-center gap-2 rounded-md border border-[#E2E8F0] bg-white px-4 text-[15px] font-semibold text-[#0F172A] transition-colors hover:bg-[#EFF6FF] disabled:cursor-wait disabled:opacity-70"
             >
-              <Shield className="h-4 w-4 text-[#2563EB]" />
+              {ssoStep === 'checking' ? <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" /> : <Shield className="h-4 w-4 text-[#2563EB]" />}
               Sign in with university SSO
             </button>
           </form>
@@ -180,42 +196,42 @@ export default function LoginPage() {
         description="Secure authentication through your university identity provider."
         size="sm"
         footer={
-          ssoStep === 'continuingsso' ? (
-            <>
-              <Button variant="outline" type="button" onClick={closeSso}>Cancel</Button>
-              <Button type="button" onClick={continueSso}><ArrowRight className="h-4 w-4" />Continue to University SSO</Button>
-            </>
-          ) : (
-            <Button variant="outline" type="button" onClick={closeSso}>Close</Button>
-          )
+          <Button variant="outline" type="button" onClick={closeSso}>Close</Button>
         }
       >
-        {ssoStep === 'continuingsso' ? (
+        {ssoStep === 'checking' ? (
+          <div className="flex items-start gap-3">
+            <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">Checking university SSO availability…</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Verifying whether the identity provider is configured for this environment.
+              </p>
+            </div>
+          </div>
+        ) : ssoStep === 'unconfigured' ? (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Career Track uses your university identity to securely verify your institutional account.
-            </p>
-            <div className="rounded-md border border-border bg-muted/40 px-4 py-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Account</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">{ssoEmail}</p>
+            <div className="flex items-start gap-3">
+              <Shield className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <p className="text-sm text-foreground">
+                University SSO is not configured for this environment yet.
+              </p>
             </div>
             <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
-              SSO integration is currently being configured. Your session will continue through the standard secure sign-in until the identity provider is connected.
+              Please use your email address and password above to sign in. You will be automatically notified when the
+              university identity provider is connected.
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-start gap-3">
-              <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Contacting university identity provider…</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Verifying your institutional account with {ssoEmail}. You will be redirected to the secure sign-in to continue.
-                </p>
-              </div>
+              <Shield className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <p className="text-sm text-foreground">
+                We could not check the university SSO service right now.
+              </p>
             </div>
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
-              Because no identity provider is connected yet, this flow does not grant access. Please use the standard sign-in above.
+            <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+              {ssoError}
             </div>
           </div>
         )}

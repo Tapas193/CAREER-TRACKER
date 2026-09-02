@@ -12,7 +12,13 @@ export class LocalStorageService implements StorageService {
     this.baseDir = uploadsDir;
     this.baseUrl = `${config.storageBaseUrl}/${config.storageLocalDir}`;
     if (!fs.existsSync(this.baseDir)) {
-      fs.mkdirSync(this.baseDir, { recursive: true });
+      try {
+        fs.mkdirSync(this.baseDir, { recursive: true });
+      } catch {
+        // In read-only environments (e.g. Vercel Lambda) the directory cannot
+        // be created.  The app still starts; file-upload endpoints will fail
+        // at runtime with a write error, which is expected.
+      }
     }
   }
 

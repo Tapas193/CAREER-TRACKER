@@ -42,6 +42,10 @@ export function createApp() {
     res.json({ success: true, message: 'Career Track API is running' });
   });
 
+  app.get('/', (_req, res) => {
+    res.json({ success: true, message: 'Career Track API is running' });
+  });
+
   app.use('/api/auth', authRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/students', studentRoutes);
@@ -67,3 +71,9 @@ export function createApp() {
 
   return app;
 }
+
+// Default export of the express app instance so Vercel's auto-detected Express
+// entrypoint (src/app.ts) has a valid request handler. Vercel calls this when a
+// request is routed to the app's default function (e.g. GET /). createApp is
+// intentionally kept for src/index.ts and api/index.ts.
+export default createApp();
