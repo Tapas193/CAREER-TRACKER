@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npx prisma generate && npm run build && node scripts/prisma-vercel-strip.mjs",
+  "buildCommand": "npx prisma generate && npx prisma migrate deploy && node scripts/seed-preparation.mjs && npm run build && node scripts/prisma-vercel-strip.mjs",
   "rewrites": [
     {
       "source": "/api/:path*",
