@@ -3,9 +3,10 @@ import { useApi } from '../../hooks/useApi';
 import { PageHeader, Card, CardHeader, CardContent, Loading, EmptyState } from '../../components/ui';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 import { asArray } from '../../utils/cn';
+import { CHART_COLORS, chartAxis, chartGrid, ChartCard, ChartTooltip, ChartEmpty } from '../../components/charts';
 
 const STATUS_COLORS: Record<string, string> = {
-  APPLIED: '#3b82f6', IN_PROGRESS: '#f59e0b', SELECTED: '#22c55e', OFFER_RECEIVED: '#16a34a', REJECTED: '#ef4444',
+  APPLIED: CHART_COLORS[0], IN_PROGRESS: CHART_COLORS[3], SELECTED: CHART_COLORS[1], OFFER_RECEIVED: CHART_COLORS[1], REJECTED: CHART_COLORS[4],
 };
 
 export default function PlacementReports() {
@@ -43,35 +44,39 @@ export default function PlacementReports() {
       <PageHeader title="Placement Reports" subtitle={`Analytics across ${total} placement record(s), ${totalRounds} round(s), ${offers} offer(s)`} />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader title="Placements by Status" />
-          <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
+        <ChartCard
+          title="Placements by Status"
+          description="Share of placement records by current status"
+        >
+          {statusData.length === 0 ? <ChartEmpty title="No placement data" message="Add placement records to see the status breakdown." /> : (
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
-                  {statusData.map((s, i) => <Cell key={i} fill={STATUS_COLORS[s.name] ?? '#94a3b8'} />)}
+                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={92} paddingAngle={2}>
+                  {statusData.map((s, i) => <Cell key={i} fill={STATUS_COLORS[s.name] ?? CHART_COLORS[i % CHART_COLORS.length]} stroke="hsl(var(--card))" />)}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: 12 }} />
-                <Legend />
+                <Tooltip content={<ChartTooltip />} />
+                <Legend wrapperStyle={{ fontSize: 12 }} verticalAlign="bottom" height={36} />
               </PieChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          )}
+        </ChartCard>
 
-        <Card>
-          <CardHeader title="Top Companies by Placement Count" />
-          <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={companyData} layout="vertical" margin={{ top: 4, right: 24, left: 8, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" allowDecimals={false} />
-                <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: 12 }} />
-                <Bar dataKey="count" fill="#3b82f6" radius={[0, 6, 6, 0]} />
+        <ChartCard
+          title="Top Companies by Placement Count"
+          description="Companies ranked by number of placement records"
+        >
+          {companyData.length === 0 ? <ChartEmpty title="No company data" message="Add placement records to see company trends." /> : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={companyData} layout="vertical" margin={{ top: 4, right: 24, left: 8, bottom: 0 }} barCategoryGap="30%">
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGrid.stroke} horizontal={false} />
+                <XAxis type="number" tick={chartAxis.tick} stroke={chartGrid.stroke} allowDecimals={false} />
+                <YAxis type="category" dataKey="name" width={120} tick={chartAxis.tick} stroke="transparent" />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--accent))' }} />
+                <Bar dataKey="count" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} maxBarSize={22} />
               </BarChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          )}
+        </ChartCard>
       </div>
 
       <Card className="mt-4">

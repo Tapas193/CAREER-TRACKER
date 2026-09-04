@@ -171,14 +171,14 @@ export function Breadcrumbs({ items }: { items: { label: string; to?: string }[]
 
 export function StatCard({ label, value, sub, icon }: { label: string; value: ReactNode; sub?: ReactNode; icon?: ReactNode }) {
   return (
-    <Card className="px-4 py-3.5">
-      <div className="flex items-start justify-between gap-2">
+    <Card className="group relative overflow-hidden px-4 py-4">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
-          <p className="mt-1.5 text-2xl font-semibold tabular-nums text-foreground">{value}</p>
+          <p className="truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="mt-1.5 truncate text-2xl font-bold leading-tight tabular-nums text-foreground">{value}</p>
           {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
         </div>
-        {icon && <div className="shrink-0 rounded-md bg-muted p-2 text-muted-foreground">{icon}</div>}
+        {icon && <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">{icon}</div>}
       </div>
     </Card>
   );
@@ -227,10 +227,10 @@ export function DataTable<T>({
   return (
     <div className={cn('overflow-x-auto', className)}>
       <table className="w-full text-sm">
-        <thead className="border-b border-border bg-muted/60 text-left text-xs text-muted-foreground">
+        <thead className="border-b border-border bg-muted/50 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
           <tr>
             {columns.map((col, i) => (
-              <th key={col.key ?? i} className={cn('whitespace-nowrap px-4 py-2.5 font-medium', col.headerClassName)}>
+              <th key={col.key ?? i} className={cn('whitespace-nowrap px-4 py-3 font-semibold', col.headerClassName)}>
                 {col.header}
               </th>
             ))}
@@ -240,7 +240,7 @@ export function DataTable<T>({
           {data.map((row, r) => (
             <tr key={r} className="transition-colors hover:bg-accent/40">
               {columns.map((col, i) => (
-                <td key={col.key ?? i} className={cn('px-4 py-2.5 align-middle text-sm text-foreground', col.className)}>
+                <td key={col.key ?? i} className={cn('px-4 py-3 align-middle text-sm text-foreground', col.className)}>
                   {col.render(row)}
                 </td>
               ))}
@@ -258,7 +258,7 @@ export function DataTable<T>({
 export function TableSkeleton({ cols = 5, rows = 6 }: { cols?: number; rows?: number }) {
   return (
     <div className="animate-pulse">
-      <div className="flex gap-4 border-b border-border bg-muted/60 px-4 py-2.5">
+      <div className="flex gap-4 border-b border-border bg-muted/50 px-4 py-3">
         {Array.from({ length: cols }).map((__, c) => (
           <div key={c} className="h-4 w-24 rounded bg-muted" />
         ))}
@@ -300,7 +300,7 @@ export function Pagination({ page, pageSize, total, onPage }: { page: number; pa
 export function EmptyState({ title = 'No records found', message, action }: { title?: string; message?: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <div className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground">
         <CheckCircle2 className="h-5 w-5" />
       </div>
       <h3 className="mt-3 text-sm font-semibold text-foreground">{title}</h3>
@@ -352,11 +352,12 @@ export function Toast({ message, type = 'success', onClose }: { message: string;
       role="status"
       aria-live="polite"
       className={cn(
-        'fixed bottom-5 right-5 z-[60] flex max-w-sm items-start gap-2 rounded-md px-4 py-3 text-sm text-white shadow-lg',
+        'toast-enter fixed bottom-5 right-5 z-[60] flex max-w-sm items-start gap-2.5 rounded-md px-4 py-3 text-sm text-white shadow-lg',
         type === 'success' ? 'bg-green-600' : 'bg-red-600'
       )}
     >
-      <span>{message}</span>
+      {type === 'success' ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />}
+      <span className="flex-1">{message}</span>
       <button type="button" onClick={() => { setVisible(false); onClose?.(); }} className="ml-1 shrink-0 opacity-80 hover:opacity-100" aria-label="Dismiss">
         <X className="h-4 w-4" />
       </button>

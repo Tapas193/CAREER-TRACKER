@@ -211,3 +211,22 @@ export interface AlumniFeedback {
   feedback?: string | null;
   feedbackDate: string;
 }
+
+export type PreparationResourceType = 'YOUTUBE' | 'ARTICLE' | 'PDF' | 'DOCUMENT' | 'PRACTICE' | 'OTHER';
+export type PreparationDifficulty = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+
+export interface PreparationResource {
+  id: number;
+  title: string;
+  description?: string | null;
+  category: string;
+  topic: string;
+  resourceType: PreparationResourceType;
+  url: string;
+  thumbnailUrl?: string | null;
+  duration?: string | null;
+  difficulty?: PreparationDifficulty | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

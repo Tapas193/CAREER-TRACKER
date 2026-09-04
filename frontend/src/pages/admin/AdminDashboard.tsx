@@ -1,7 +1,8 @@
 import { useApi } from '../../hooks/useApi';
-import { PageHeader, StatCard, Card, CardHeader, CardContent, Loading } from '../../components/ui';
+import { PageHeader, StatCard, Card, Loading } from '../../components/ui';
 import { GraduationCap, Users, Briefcase, Activity, Award, BookOpen, Building2, UsersRound } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { CHART_COLORS, chartAxis, chartGrid, ChartCard, ChartTooltip, ChartEmpty } from '../../components/charts';
 
 interface AdminDashboardData {
   totalStudents: number;
@@ -43,22 +44,21 @@ export default function AdminDashboard() {
       </div>
 
       <Card className="mt-5">
-        <CardHeader title="Students by Department" subtitle="Distribution across offering courses" />
-        <CardContent>
-          {deptData.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">No department data available.</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={deptData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} axisLine={{ stroke: 'var(--border)' }} tickLine={false} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{ fill: 'var(--accent)' }} contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: 12 }} />
-                <Bar dataKey="Students" fill="var(--primary)" radius={[3, 3, 0, 0]} maxBarSize={48} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
+        <ChartCard
+          title="Students by Department"
+          description="Distribution across offering courses"
+          empty={<ChartEmpty title="No department data" message="Department enrolment data will appear here once courses are populated." />}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={deptData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="28%">
+              <CartesianGrid strokeDasharray="3 3" stroke={chartGrid.stroke} vertical={false} />
+              <XAxis dataKey="name" tick={chartAxis.tick} axisLine={{ stroke: chartGrid.stroke }} tickLine={false} interval={0} />
+              <YAxis allowDecimals={false} tick={chartAxis.tick} axisLine={false} tickLine={false} width={36} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--accent))' }} />
+              <Bar dataKey="Students" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} maxBarSize={44} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </Card>
     </div>
   );

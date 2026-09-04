@@ -2,6 +2,7 @@ import { useApi } from '../../hooks/useApi';
 import { PageHeader, Card, CardHeader, CardContent, StatusBadge, Loading, EmptyState, StatCard } from '../../components/ui';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { GraduationCap, AlertTriangle, BarChart3, CheckCircle2 } from 'lucide-react';
+import { CHART_COLORS, chartAxis, chartGrid, ChartCard, ChartTooltip, ChartEmpty } from '../../components/charts';
 import type { AcademicRecord, Backlog } from '../../types';
 import { asArray } from '../../utils/cn';
 
@@ -37,24 +38,23 @@ export default function AcademicProgress() {
 
       <div className="mb-5 grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader title="CGPA / SGPA Trend" subtitle="Semester-wise progression" />
-          <CardContent>
-            {chartData.length === 0 ? (
-              <EmptyState title="No academic records yet" message="Semester results will appear here as they are recorded." />
-            ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="semester" tick={{ fontSize: 12 }} />
-                  <YAxis domain={[0, 10]} tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line type="monotone" dataKey="CGPA" stroke="var(--primary)" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="SGPA" stroke="#0891b2" strokeWidth={2} dot={{ r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
+          <ChartCard
+            title="CGPA / SGPA Trend"
+            description="Semester-wise progression"
+            empty={<ChartEmpty title="No academic records yet" message="Semester results will appear here as they are recorded." />}
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 5, right: 16, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGrid.stroke} />
+                <XAxis dataKey="semester" tick={chartAxis.tick} axisLine={{ stroke: chartGrid.stroke }} tickLine={false} />
+                <YAxis domain={[0, 10]} tick={chartAxis.tick} axisLine={false} tickLine={false} width={34} />
+                <Tooltip content={<ChartTooltip />} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Line type="monotone" dataKey="CGPA" stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="SGPA" stroke={CHART_COLORS[2]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
         </Card>
 
         <Card>

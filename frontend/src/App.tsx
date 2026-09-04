@@ -13,6 +13,7 @@ const AdminCourses = lazy(() => import('./pages/admin/AdminCourses'));
 const AdminSkills = lazy(() => import('./pages/admin/AdminSkills'));
 const AdminPlacements = lazy(() => import('./pages/admin/AdminPlacements'));
 const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
+const AdminPreparationResources = lazy(() => import('./pages/admin/AdminPreparationResources'));
 const PlacementDashboard = lazy(() => import('./pages/placement/PlacementDashboard'));
 const PlacementDrives = lazy(() => import('./pages/placement/PlacementDrives'));
 const PlacementList = lazy(() => import('./pages/placement/PlacementList'));
@@ -56,6 +57,9 @@ const StudentCareerXp = lazy(() => import('./pages/student/StudentCareerXp'));
 const StudentAlumniNetwork = lazy(() => import('./pages/student/StudentAlumniNetwork'));
 const StudentInternshipHub = lazy(() => import('./pages/student/StudentInternshipHub'));
 const StudentLearning = lazy(() => import('./pages/student/StudentLearning'));
+const StudentPreparation = lazy(() => import('./pages/student/StudentPreparation'));
+const StudentPreparationInterview = lazy(() => import('./pages/student/StudentPreparationInterview'));
+const StudentPreparationCategory = lazy(() => import('./pages/student/StudentPreparationCategory'));
 const AlumniDashboard = lazy(() => import('./pages/alumni/AlumniDashboard'));
 const AlumniProfile = lazy(() => import('./pages/alumni/AlumniProfile'));
 const AlumniCareer = lazy(() => import('./pages/alumni/AlumniCareer'));
@@ -123,6 +127,7 @@ export default function App() {
           <Route path="/admin/skills" element={<RoleGate panel="admin"><AdminSkills /></RoleGate>} />
           <Route path="/admin/placements" element={<RoleGate panel="admin"><AdminPlacements /></RoleGate>} />
           <Route path="/admin/reports" element={<RoleGate panel="admin"><AdminReports /></RoleGate>} />
+          <Route path="/admin/preparation-resources" element={<RoleGate panel="admin"><AdminPreparationResources /></RoleGate>} />
           <Route path="/placement" element={<RoleGate panel="placement"><PlacementDashboard /></RoleGate>} />
           <Route path="/placement/drives" element={<RoleGate panel="placement"><PlacementDrives /></RoleGate>} />
           <Route path="/placement/drive-detail" element={<RoleGate panel="placement"><PlacementDriveDetail /></RoleGate>} />
@@ -166,6 +171,9 @@ export default function App() {
           <Route path="/student/alumni-network" element={<RoleGate panel="student"><StudentAlumniNetwork /></RoleGate>} />
           <Route path="/student/internship-hub" element={<RoleGate panel="student"><StudentInternshipHub /></RoleGate>} />
           <Route path="/student/learning" element={<RoleGate panel="student"><StudentLearning /></RoleGate>} />
+          <Route path="/student/preparation" element={<RoleGate panel="student"><StudentPreparation /></RoleGate>} />
+          <Route path="/student/preparation/interview" element={<RoleGate panel="student"><StudentPreparationInterview /></RoleGate>} />
+          <Route path="/student/preparation/:category" element={<RoleGate panel="student"><StudentPreparationCategory /></RoleGate>} />
           <Route path="/alumni" element={<RoleGate panel="alumni"><AlumniDashboard /></RoleGate>} />
           <Route path="/alumni/profile" element={<RoleGate panel="alumni"><AlumniProfile /></RoleGate>} />
           <Route path="/alumni/career" element={<RoleGate panel="alumni"><AlumniCareer /></RoleGate>} />

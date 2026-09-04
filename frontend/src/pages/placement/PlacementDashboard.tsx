@@ -3,6 +3,7 @@ import { PageHeader, StatCard, Card, CardHeader, CardContent, Loading } from '..
 import { Link } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Users, UserCheck, Briefcase, TrendingUp, Banknote, Trophy, Activity, CalendarDays, GitBranch, LayoutGrid } from 'lucide-react';
+import { CHART_COLORS, ChartCard, ChartTooltip, ChartEmpty } from '../../components/charts';
 
 interface PlacementDashboardData {
   eligibleCount: number;
@@ -15,8 +16,6 @@ interface PlacementDashboardData {
   byStatus: Record<string, number>;
   activeDrives: { companyName: string; jobRole: string; count: number }[];
 }
-
-const COLORS = ['#64748b', '#3b82f6', '#22c55e', '#ef4444', '#a855f7'];
 
 export default function PlacementDashboard() {
   const { data, isLoading } = useApi<PlacementDashboardData>(['placement-dashboard'], '/api/dashboard');
@@ -48,30 +47,33 @@ export default function PlacementDashboard() {
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader title="Placements by Status" />
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
-                  {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                </Pie>
-                <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: 12 }} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <ChartCard
+          title="Placements by Status"
+          description="Distribution of students by current placement status"
+          empty={<ChartEmpty title="No placement data" message="Placement status will appear here once students are tracked." />}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={92} paddingAngle={2}>
+                {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="hsl(var(--card))" />)}
+              </Pie>
+              <Tooltip content={<ChartTooltip />} />
+              <Legend wrapperStyle={{ fontSize: 12 }} verticalAlign="bottom" height={36} />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
         <Card>
           <CardHeader title="Active Drives" subtitle="Grouped by company, role and date" />
           <CardContent>
             {!data.activeDrives?.length ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">No active drives right now.</p>
+              <div className="flex h-64 items-center justify-center sm:h-72">
+                <ChartEmpty title="No active drives" message="Create a placement drive to see it listed here." />
+              </div>
             ) : (
-              <ul className="divide-y divide-border">
+              <ul className="max-h-[18rem] space-y-2 overflow-y-auto">
                 {data.activeDrives.map((d, i) => (
-                  <li key={i} className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <li key={i} className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/20 px-3 py-2.5 text-sm">
                     <div className="min-w-0">
                       <p className="truncate font-medium text-foreground">{d.companyName} — {d.jobRole}</p>
                     </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
 import { api } from '../../api/client';
@@ -12,7 +12,6 @@ import {
   FilterBar,
   DataTable,
   StatusBadge,
-  Loading,
   ConfirmDialog,
   Modal,
   FormField,
@@ -35,15 +34,32 @@ const emptyForm = {
 export default function AdminStudents() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const [searchInput, setSearchInput] = useState(params.get('search') ?? '');
   const [search, setSearch] = useState(params.get('search') ?? '');
   const [status, setStatus] = useState('');
   const [courseId, setCourseId] = useState('');
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
 
+  // The text field is bound to `searchInput` so every keystroke is kept and focus
+  // never leaves the input. `search` is a debounced copy actually sent to the API,
+  // so typing a full name like "Aarav" works normally without the page resetting.
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const query = new URLSearchParams({
+    search,
+    ...(status ? { status } : {}),
+    ...(courseId ? { courseId: String(courseId) } : {}),
+    page: String(page),
+    pageSize: String(PAGE_SIZE),
+  }).toString();
+
   const { data, isLoading, isError, refetch } = useApi<{ items: Student[]; total: number }>(
     ['admin-students', search, status, courseId, String(page)],
-    `/api/students?search=${search}${status ? `&status=${status}` : ''}${courseId ? `&courseId=${courseId}` : ''}&page=${page}&pageSize=${PAGE_SIZE}`
+    `/api/students?${query}`
   );
   const { data: courses } = useApi<Course[]>(['courses'], '/api/courses');
   const courseList = asArray<any>(courses);
@@ -66,6 +82,7 @@ export default function AdminStudents() {
   };
 
   const resetFilters = () => {
+    setSearchInput('');
     setSearch('');
     setStatus('');
     setCourseId('');
@@ -150,8 +167,6 @@ export default function AdminStudents() {
     ];
   };
 
-  if (isLoading && !students.length) return <Loading label="Loading students…" />;
-
   return (
     <div>
       {toast && <Toast message={toast} type={toast.toLowerCase().includes('error') ? 'error' : 'success'} onClose={() => setToast('')} />}
@@ -176,8 +191,8 @@ export default function AdminStudents() {
                 <input
                   className="field-input pl-8"
                   placeholder="Search by name, roll no, enrollment…"
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  value={searchInput}
+                  onChange={(e) => { setSearchInput(e.target.value); setPage(1); }}
                   aria-label="Search students"
                 />
               </div>

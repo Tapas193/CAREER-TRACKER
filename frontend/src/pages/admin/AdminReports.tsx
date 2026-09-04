@@ -4,9 +4,8 @@ import { PageHeader, StatCard, Card, CardHeader, CardContent, Loading } from '..
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import { Users, GraduationCap, Briefcase, Award } from 'lucide-react';
 import { asArray } from '../../utils/cn';
+import { CHART_COLORS, chartAxis, chartGrid, ChartCard, ChartTooltip, ChartEmpty } from '../../components/charts';
 import PlacementReports from '../placement/PlacementReports';
-
-const DEPT_COLORS = ['#3b82f6', '#22c55e', '#a855f7', '#f59e0b', '#ef4444', '#06b6d4'];
 
 export default function AdminReports() {
   const { data, isLoading } = useApi<any>(['admin-dashboard'], '/api/dashboard');
@@ -35,26 +34,23 @@ export default function AdminReports() {
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader title="Students by Department" />
-          <CardContent>
-            {byDepartment.length === 0 ? (
-              <p className="py-10 text-center text-sm text-muted-foreground">No department data.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={byDepartment} margin={{ top: 4, right: 16, left: -16, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                  <XAxis dataKey="courseName" tick={{ fontSize: 10 }} stroke="var(--muted-foreground)" interval={0} angle={-20} textAnchor="end" height={60} />
-                  <YAxis tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" allowDecimals={false} />
-                  <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: 12 }} />
-                  <Bar dataKey="studentCount" radius={[6, 6, 0, 0]}>
-                    {byDepartment.map((_, i) => <Cell key={i} fill={DEPT_COLORS[i % DEPT_COLORS.length]} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+        <ChartCard
+          title="Students by Department"
+          description="Distribution of students across departments"
+          empty={<ChartEmpty title="No department data" message="Add students and courses to populate this chart." />}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={byDepartment} margin={{ top: 8, right: 16, left: 0, bottom: 8 }} barCategoryGap="30%">
+              <CartesianGrid strokeDasharray="3 3" stroke={chartGrid.stroke} vertical={false} />
+              <XAxis dataKey="courseName" tick={chartAxis.tick} axisLine={{ stroke: chartGrid.stroke }} tickLine={false} interval={0} angle={-20} textAnchor="end" height={56} />
+              <YAxis tick={chartAxis.tick} axisLine={false} tickLine={false} allowDecimals={false} width={36} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--accent))' }} />
+              <Bar dataKey="studentCount" radius={[4, 4, 0, 0]} maxBarSize={40}>
+                {byDepartment.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
         <Card>
           <CardHeader title="Department Totals" />
@@ -70,7 +66,7 @@ export default function AdminReports() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {byDepartment.map((d) => (
-                    <tr key={d.courseId}>
+                    <tr key={d.courseId} className="transition-colors hover:bg-accent/40">
                       <td className="px-4 py-2.5 font-medium">{d.department}</td>
                       <td className="px-4 py-2.5">{d.courseName}</td>
                       <td className="px-4 py-2.5 text-right tabular-nums">{d.studentCount}</td>

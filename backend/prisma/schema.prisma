@@ -66,6 +66,21 @@ enum RoundResult {
   REJECTED
 }
 
+enum PreparationResourceType {
+  YOUTUBE
+  ARTICLE
+  PDF
+  DOCUMENT
+  PRACTICE
+  OTHER
+}
+
+enum PreparationDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
 // ============ User ============
 
 model User {
@@ -344,4 +359,28 @@ model AlumniFeedback {
 
   @@index([studentId])
   @@map("Alumini_feedback")
+}
+
+// ============ Preparation Resource ============
+
+model PreparationResource {
+  id            Int                      @id @default(autoincrement())
+  title         String                   @db.VarChar(200)
+  description   String?                  @db.Text
+  category      String                   @db.VarChar(100)
+  topic         String                   @db.VarChar(200)
+  resourceType  PreparationResourceType  @map("resource_type")
+  url           String                   @db.VarChar(1000)
+  thumbnailUrl  String?                  @map("thumbnail_url") @db.VarChar(1000)
+  duration      String?                  @db.VarChar(50)
+  difficulty    PreparationDifficulty?   @map("difficulty")
+  isActive      Boolean                  @default(true) @map("is_active")
+  createdAt     DateTime                 @default(now()) @map("created_at")
+  updatedAt     DateTime                 @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([topic])
+  @@index([resourceType])
+  @@index([isActive])
+  @@map("Preparation_resource")
 }

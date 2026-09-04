@@ -6,7 +6,10 @@ import { Role } from '@prisma/client';
 
 export const userService = {
   async list(params: { search?: string; role?: string; page?: number; pageSize?: number }) {
-    const { search, role, page = 1, pageSize = 50 } = params;
+    const { search, role } = params;
+    // req.query sends strings; coerce to safe integers so Prisma skip/take get numbers.
+    const page = Math.max(1, Number.parseInt(String(params.page), 10) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number.parseInt(String(params.pageSize), 10) || 50));
 
     const where: any = {};
 

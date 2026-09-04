@@ -12,7 +12,21 @@ const studentInclude = {
   placements: { include: { rounds: { include: { feedback: true } }, offerLetter: true } },
   careerHistory: { orderBy: [{ startDate: 'desc' }] },
   alumniFeedback: { orderBy: [{ feedbackDate: 'desc' }] },
-  user: true,
+  user: {
+    select: {
+      id: true,
+      firstName: true,
+      middleName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      role: true,
+      accountStatus: true,
+      studentId: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  },
 } satisfies Prisma.StudentInclude;
 
 export interface CreateStudentData {
@@ -36,15 +50,21 @@ export interface CreateStudentData {
 
 export const studentRepo = {
   findAll(params: { search?: string; status?: string; courseId?: number; page?: number; pageSize?: number; sortBy?: string; order?: 'asc' | 'desc' }) {
-    const { search, status, courseId, page = 1, pageSize = 50, sortBy = 'id', order = 'asc' } = params;
+    const { search, status, courseId, sortBy = 'id', order = 'asc' } = params;
+    // Query params arrive as strings from express; coerce them to safe integers so
+    // Prisma's skip/take receive numbers (a raw string throws a PrismaClientValidationError -> 400).
+    const pageNum = Math.max(1, Number.parseInt(String(params.page), 10) || 1);
+    const pageSizeNum = Math.min(100, Math.max(1, Number.parseInt(String(params.pageSize), 10) || 50));
     const where: Prisma.StudentWhereInput = {};
     if (search) {
       where.OR = [
         { firstName: { contains: search, mode: 'insensitive' } },
+        { middleName: { contains: search, mode: 'insensitive' } },
         { lastName: { contains: search, mode: 'insensitive' } },
         { enrollmentNo: { contains: search, mode: 'insensitive' } },
         { rollNumber: { contains: search, mode: 'insensitive' } },
         { admissionNo: { contains: search, mode: 'insensitive' } },
+        { user: { email: { contains: search, mode: 'insensitive' } } },
       ];
     }
     if (status) where.currentStatus = status as StudentStatus;
@@ -55,9 +75,9 @@ export const studentRepo = {
     ];
     const orderBy = allowedSort.includes(sortBy) ? { [sortBy]: order } : { id: 'asc' as Prisma.SortOrder };
 
-    const skip = (page - 1) * pageSize;
+    const skip = (pageNum - 1) * pageSizeNum;
     return Promise.all([
-      prisma.student.findMany({ where, include: studentInclude, orderBy, skip, take: pageSize }),
+      prisma.student.findMany({ where, include: studentInclude, orderBy, skip, take: pageSizeNum }),
       prisma.student.count({ where }),
     ]);
   },

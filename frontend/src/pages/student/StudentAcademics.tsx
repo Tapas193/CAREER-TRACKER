@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useApi } from '../../hooks/useApi';
 import { api } from '../../api/client';
-import { PageHeader, Card, CardHeader, CardContent, Button, Input, Select, DataTable, StatusBadge, Loading, Modal, FormField, Toast, StatCard, Badge } from '../../components/ui';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { PageHeader, Card, Button, Input, Select, DataTable, StatusBadge, Loading, Modal, FormField, Toast, StatCard, Badge } from '../../components/ui';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { Plus, TrendingUp, ListChecks, GraduationCap } from 'lucide-react';
+import { CHART_COLORS, chartAxis, chartGrid, ChartCard, ChartTooltip, ChartEmpty } from '../../components/charts';
 import type { AcademicRecord, Backlog } from '../../types';
 import { asArray } from '../../utils/cn';
 
@@ -70,19 +71,23 @@ export default function StudentAcademics() {
           </div>
 
           <Card className="mb-4">
-            <CardHeader title="Academic Trend" subtitle="CGPA and SGPA across semesters" />
-            <CardContent>
-              <ResponsiveContainer width="100%" height={240}>
-                <LineChart data={chartData} margin={{ top: 8, right: 16, left: -16, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="semester" tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                  <YAxis domain={[0, 10]} tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                  <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: 12 }} />
-                  <Line type="monotone" dataKey="CGPA" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="SGPA" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} />
+            <ChartCard
+              title="Academic Trend"
+              description="CGPA and SGPA across semesters"
+              empty={<ChartEmpty title="No academic records yet" message="Add semester results to see your progression here." />}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartGrid.stroke} />
+                  <XAxis dataKey="semester" tick={chartAxis.tick} axisLine={{ stroke: chartGrid.stroke }} tickLine={false} />
+                  <YAxis domain={[0, 10]} tick={chartAxis.tick} axisLine={false} tickLine={false} width={34} />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Line type="monotone" dataKey="CGPA" stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                  <Line type="monotone" dataKey="SGPA" stroke={CHART_COLORS[1]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                 </LineChart>
               </ResponsiveContainer>
-            </CardContent>
+            </ChartCard>
           </Card>
         </>
       )}
