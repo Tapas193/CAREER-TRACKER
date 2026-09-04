@@ -6,7 +6,11 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-me',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5179',
-  cookieSecure: process.env.COOKIE_SECURE === 'true',
+  // In production HTTPS (split-origin frontend/backend) the auth cookie MUST be
+  // Secure (SameSite=None is rejected by browsers without it). Production is
+  // always served over HTTPS here, so default Secure to true in production and
+  // only allow a local/dev override via COOKIE_SECURE.
+  cookieSecure: process.env.NODE_ENV === 'production' || process.env.COOKIE_SECURE === 'true',
   storageDriver: process.env.STORAGE_DRIVER || 'local',
   storageLocalDir: process.env.STORAGE_LOCAL_DIR || 'uploads',
   storageBaseUrl: process.env.STORAGE_BASE_URL || `http://localhost:${process.env.PORT || 4000}`,
