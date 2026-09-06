@@ -81,6 +81,18 @@ enum PreparationDifficulty {
   ADVANCED
 }
 
+enum NotificationType {
+  PLACEMENT_DRIVE
+  PLACEMENT_ROUND
+  ROUND_FEEDBACK
+  OFFER_LETTER
+  PREPARATION_RESOURCE
+  ACADEMIC
+  BACKLOG
+  GRADUATION
+  SYSTEM
+}
+
 // ============ User ============
 
 model User {
@@ -95,6 +107,7 @@ model User {
   accountStatus    AccountStatus @default(ACTIVE) @map("account_status")
   studentId        Int?          @unique @map("student_student_id")
   student          Student?      @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  notifications    Notification[]
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
@@ -383,4 +396,24 @@ model PreparationResource {
   @@index([resourceType])
   @@index([isActive])
   @@map("Preparation_resource")
+}
+
+// ============ Notification ============
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  recipientId Int              @map("recipient_id")
+  recipient   User             @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  title       String           @db.VarChar(200)
+  message     String           @db.Text
+  type        NotificationType @map("notification_type")
+  relatedId   Int?             @map("related_id")
+  relatedType String?          @map("related_type") @db.VarChar(100)
+  isRead      Boolean          @default(false) @map("is_read")
+  readAt      DateTime?        @map("read_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@index([recipientId, isRead])
+  @@index([recipientId, createdAt])
+  @@map("Notification")
 }

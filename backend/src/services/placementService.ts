@@ -1,7 +1,8 @@
 import { prisma } from '../config/prisma';
 import { AppError } from '../utils/http';
-import { PlacementStatus, Role, StudentStatus } from '@prisma/client';
+import { PlacementStatus, Role, StudentStatus, NotificationType } from '@prisma/client';
 import { AuthUser } from '../types';
+import { notificationService } from './notificationService';
 
 const placementInclude = {
   student: true,
@@ -87,6 +88,15 @@ export const placementService = {
         })
       )
     );
+
+    // A drive for eligible students is a meaningful event -> notify each participant.
+    await notificationService.notifyStudents(studentIds, {
+      type: NotificationType.PLACEMENT_DRIVE,
+      title: 'New placement drive',
+      message: `${driveFields.companyName} has opened a new placement opportunity for ${driveFields.jobRole}.`,
+      relatedType: 'PlacementDrive',
+    });
+
     return created;
   },
 
@@ -123,7 +133,17 @@ export const placementService = {
     if (user.role !== Role.PLACEMENT_HEAD && user.role !== Role.ADMIN) {
       throw new AppError('Only a Placement Head or Admin can create placement rounds', 403);
     }
-    return prisma.placementRound.create({ data, include: { feedback: true } });
+    const round = await prisma.placementRound.create({ data, include: { feedback: true } });
+
+    await notificationService.notifyStudent(placement.studentId, {
+      type: NotificationType.PLACEMENT_ROUND,
+      title: `New ${placement.companyName} round scheduled`,
+      message: `Round ${round.roundNumber} (${round.roundType}) for ${placement.companyName} is scheduled on ${round.roundDate.toISOString().split('T')[0]}.`,
+      relatedId: round.id,
+      relatedType: 'PlacementRound',
+    });
+
+    return round;
   },
 
   async getRounds(placementId: number, user: AuthUser) {
@@ -175,7 +195,17 @@ export const placementService = {
     assertCanAccess(user, round.placement.studentId);
     const existing = await prisma.roundFeedback.findUnique({ where: { placementRoundId: data.placementRoundId } });
     if (existing) throw new AppError('Feedback already exists for this round', 409);
-    return prisma.roundFeedback.create({ data });
+    const feedback = await prisma.roundFeedback.create({ data });
+
+    await notificationService.notifyStudent(round.placement.studentId, {
+      type: NotificationType.ROUND_FEEDBACK,
+      title: `Feedback available for ${round.placement.companyName}`,
+      message: `Feedback for round ${round.roundNumber} (${round.roundType}) at ${round.placement.companyName} has been published.`,
+      relatedId: feedback.id,
+      relatedType: 'RoundFeedback',
+    });
+
+    return feedback;
   },
 
   async updateFeedback(id: number, data: any, user: AuthUser) {
@@ -211,7 +241,17 @@ export const placementService = {
     assertCanAccess(user, placement.studentId);
     const existing = await prisma.offerLetter.findUnique({ where: { placementId: data.placementId } });
     if (existing) throw new AppError('This placement already has an offer letter', 409);
-    return prisma.offerLetter.create({ data });
+    const offer = await prisma.offerLetter.create({ data });
+
+    await notificationService.notifyStudent(placement.studentId, {
+      type: NotificationType.OFFER_LETTER,
+      title: `Offer letter received from ${placement.companyName}`,
+      message: `Your offer letter for ${placement.jobRole} at ${placement.companyName} has been uploaded.`,
+      relatedId: offer.id,
+      relatedType: 'OfferLetter',
+    });
+
+    return offer;
   },
 
   async updateOffer(id: number, data: any, user: AuthUser) {

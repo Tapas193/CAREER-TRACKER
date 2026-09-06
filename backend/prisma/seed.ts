@@ -1,4 +1,4 @@
-import { PrismaClient, Role, AccountStatus, StudentStatus, GraduationStatus, ResultStatus, PlacementStatus, RoundType, RoundResult, PreparationResourceType, PreparationDifficulty } from '@prisma/client';
+import { PrismaClient, Role, AccountStatus, StudentStatus, GraduationStatus, ResultStatus, PlacementStatus, RoundType, RoundResult, PreparationResourceType, PreparationDifficulty, NotificationType } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { preparationResources } from './preparation-seed-data.mjs';
 
@@ -12,6 +12,7 @@ async function main() {
   console.log('Seeding database...');
   await prisma.$transaction([
     prisma.preparationResource.deleteMany(),
+    prisma.notification.deleteMany(),
     prisma.alumniFeedback.deleteMany(),
     prisma.careerHistory.deleteMany(),
     prisma.roundFeedback.deleteMany(),
@@ -369,6 +370,55 @@ async function main() {
   await prisma.preparationResource.createMany({
     data: preparationResources,
   });
+
+  // ===== Notifications (dev demo data, only touches the notification table) =====
+  const aaravUser = await prisma.user.findUnique({ where: { email: 'aarav@student.com' } });
+  const adminUser = await prisma.user.findUnique({ where: { email: 'admin@careertrack.com' } });
+  const placementUser = await prisma.user.findUnique({ where: { email: 'placement@careertrack.com' } });
+  const rahulUser = await prisma.user.findUnique({ where: { email: 'rahul@student.com' } });
+
+  const notifRows = [
+    aaravUser && {
+      recipientId: aaravUser.id,
+      type: NotificationType.PLACEMENT_DRIVE,
+      title: 'New placement drive',
+      message: 'Google has opened a new placement opportunity for Software Engineer.',
+      relatedId: aaravUser.studentId,
+      relatedType: 'PlacementDrive',
+    },
+    aaravUser && {
+      recipientId: aaravUser.id,
+      type: NotificationType.OFFER_LETTER,
+      title: 'Offer letter received from Google',
+      message: 'Your offer letter for Software Engineer at Google has been uploaded.',
+      relatedId: aaravUser.studentId,
+      relatedType: 'OfferLetter',
+    },
+    rahulUser && {
+      recipientId: rahulUser.id,
+      type: NotificationType.GRADUATION,
+      title: 'You are now an alumni',
+      message: 'Your profile has been transitioned to alumni status. Welcome to the alumni network!',
+      relatedId: rahulUser.studentId,
+      relatedType: 'Student',
+    },
+    adminUser && {
+      recipientId: adminUser.id,
+      type: NotificationType.SYSTEM,
+      title: 'Welcome to Career Track',
+      message: 'Notifications keep you updated on placement, academic and graduation events across the platform.',
+    },
+    placementUser && {
+      recipientId: placementUser.id,
+      type: NotificationType.SYSTEM,
+      title: 'Welcome to Career Track',
+      message: 'You can view updates here as placement drives, rounds, feedback and offers are created.',
+    },
+  ].filter((r): r is NonNullable<typeof r> => Boolean(r));
+
+  if (notifRows.length > 0) {
+    await prisma.notification.createMany({ data: notifRows as any });
+  }
 
   console.log('Seeding complete!');
   console.log('--- Login credentials (password for all below: KeepSecret@123) ---');

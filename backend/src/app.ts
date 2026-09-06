@@ -25,6 +25,7 @@ import alumniFeedbackRoutes from './routes/alumniFeedbackRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import preparationRoutes from './routes/preparationRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ export function createApp() {
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/upload', uploadRoutes);
   app.use('/api/student/preparation', preparationRoutes);
+  app.use('/api/notifications', notificationRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

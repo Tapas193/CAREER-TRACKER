@@ -64,6 +64,7 @@ const AlumniDashboard = lazy(() => import('./pages/alumni/AlumniDashboard'));
 const AlumniProfile = lazy(() => import('./pages/alumni/AlumniProfile'));
 const AlumniCareer = lazy(() => import('./pages/alumni/AlumniCareer'));
 const AlumniFeedback = lazy(() => import('./pages/alumni/AlumniFeedback'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 
 const homeFor = (u: AuthUser): string => {
   if (u.role === 'STUDENT') {
@@ -178,6 +179,7 @@ export default function App() {
           <Route path="/alumni/profile" element={<RoleGate panel="alumni"><AlumniProfile /></RoleGate>} />
           <Route path="/alumni/career" element={<RoleGate panel="alumni"><AlumniCareer /></RoleGate>} />
           <Route path="/alumni/feedback" element={<RoleGate panel="alumni"><AlumniFeedback /></RoleGate>} />
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

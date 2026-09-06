@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { preparationService } from '../services/preparationService';
+import { notificationService } from '../services/notificationService';
 import { success, asyncHandler } from '../utils/http';
-import { Role } from '@prisma/client';
+import { NotificationType, Role } from '@prisma/client';
 
 export const preparationController = {
   list: asyncHandler(async (req: Request, res: Response) => {
@@ -26,11 +27,36 @@ export const preparationController = {
 
   create: asyncHandler(async (req: Request, res: Response) => {
     const resource = await preparationService.create(req.validated);
+    if (resource.isActive !== false) {
+      await notificationService.notifyStudents(
+        await notificationService.activeStudentIds(),
+        {
+          type: NotificationType.PREPARATION_RESOURCE,
+          title: 'New preparation resource',
+          message: `"${resource.title}" (${resource.topic}) has been added to your preparation library.`,
+          relatedId: resource.id,
+          relatedType: 'PreparationResource',
+        }
+      );
+    }
     return success(res, resource, 'Preparation resource created', 201);
   }),
 
   update: asyncHandler(async (req: Request, res: Response) => {
+    const existing = await preparationService.getById(Number(req.params.id));
     const resource = await preparationService.update(Number(req.params.id), req.validated);
+    if (existing.isActive === false && resource.isActive === true) {
+      await notificationService.notifyStudents(
+        await notificationService.activeStudentIds(),
+        {
+          type: NotificationType.PREPARATION_RESOURCE,
+          title: 'New preparation resource',
+          message: `"${resource.title}" (${resource.topic}) has been added to your preparation library.`,
+          relatedId: resource.id,
+          relatedType: 'PreparationResource',
+        }
+      );
+    }
     return success(res, resource, 'Preparation resource updated');
   }),
 

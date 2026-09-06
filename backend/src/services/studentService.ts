@@ -2,7 +2,8 @@ import { prisma } from '../config/prisma';
 import { studentRepo, CreateStudentData } from '../repositories/studentRepo';
 import { hashPassword } from '../utils/password';
 import { AppError } from '../utils/http';
-import { StudentStatus, GraduationStatus, Role } from '@prisma/client';
+import { StudentStatus, GraduationStatus, Role, NotificationType } from '@prisma/client';
+import { notificationService } from './notificationService';
 
 export interface CreateStudentWithAccount extends CreateStudentData {
   createAccount?: boolean;
@@ -83,15 +84,34 @@ export const studentService = {
       currentStatus: StudentStatus.GRADUATED,
       graduationStatus: GraduationStatus.GRADUATED,
     });
+
+    await notificationService.notifyStudent(id, {
+      type: NotificationType.GRADUATION,
+      title: 'Graduation approved',
+      message: `Congratulations! You have been marked as graduated on Career Track.`,
+      relatedId: id,
+      relatedType: 'Student',
+    });
+
     return this.getById(id);
   },
 
   async markAlumni(id: number) {
     await this.ensureExists(id);
-    return studentRepo.update(id, {
+    const student = await studentRepo.update(id, {
       currentStatus: StudentStatus.ALUMNI,
       graduationStatus: GraduationStatus.GRADUATED,
     });
+
+    await notificationService.notifyStudent(id, {
+      type: NotificationType.GRADUATION,
+      title: 'You are now an alumni',
+      message: 'Your profile has been transitioned to alumni status. Welcome to the alumni network!',
+      relatedId: id,
+      relatedType: 'Student',
+    });
+
+    return student;
   },
 
   async activate(id: number) {

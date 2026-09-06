@@ -230,3 +230,37 @@ export interface PreparationResource {
   createdAt: string;
   updatedAt: string;
 }
+
+export type NotificationType =
+  | 'PLACEMENT_DRIVE'
+  | 'PLACEMENT_ROUND'
+  | 'ROUND_FEEDBACK'
+  | 'OFFER_LETTER'
+  | 'PREPARATION_RESOURCE'
+  | 'ACADEMIC'
+  | 'BACKLOG'
+  | 'GRADUATION'
+  | 'SYSTEM';
+
+export interface AppNotification {
+  id: number;
+  recipientId: number;
+  title: string;
+  message: string;
+  type: NotificationType;
+  relatedId?: number | null;
+  relatedType?: string | null;
+  isRead: boolean;
+  readAt?: string | null;
+  createdAt: string;
+}
+
+export interface NotificationListResponse {
+  items: AppNotification[];
+  total: number;
+  unreadCount: number;
+}
+
+export interface UnreadCountResponse {
+  unreadCount: number;
+}

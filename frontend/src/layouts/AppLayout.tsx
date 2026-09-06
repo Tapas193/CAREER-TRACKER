@@ -35,6 +35,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import NotificationBell from '../components/notifications/NotificationBell';
 import { ActionMenu, Avatar, Breadcrumbs, Button } from '../components/ui';
 import { cn } from '../utils/cn';
 import type { AuthUser } from '../types';
@@ -73,6 +74,10 @@ const NAV: Record<Panel, NavGroup[]> = {
     {
       title: 'Analytics',
       items: [{ to: '/admin/reports', label: 'Reports', icon: BarChart3 }],
+    },
+    {
+      title: 'System',
+      items: [{ to: '/notifications', label: 'Notifications', icon: Bell }],
     },
   ],
   student: [
@@ -139,7 +144,7 @@ const NAV: Record<Panel, NavGroup[]> = {
     {
       title: 'System',
       items: [
-        { to: '/student/notifications', label: 'Notifications', icon: Bell },
+        { to: '/notifications', label: 'Notifications', icon: Bell },
         { to: '/student/support', label: 'Help & Support', icon: HelpCircle },
       ],
     },
@@ -157,6 +162,10 @@ const NAV: Record<Panel, NavGroup[]> = {
         { to: '/placement/reports', label: 'Reports', icon: BarChart3 },
       ],
     },
+    {
+      title: 'System',
+      items: [{ to: '/notifications', label: 'Notifications', icon: Bell }],
+    },
   ],
   alumni: [
     { title: 'Main', items: [{ to: '/alumni', label: 'Dashboard', icon: LayoutDashboard }] },
@@ -167,6 +176,10 @@ const NAV: Record<Panel, NavGroup[]> = {
         { to: '/alumni/career', label: 'Career History', icon: Briefcase },
         { to: '/alumni/feedback', label: 'Feedback', icon: MessagesSquare },
       ],
+    },
+    {
+      title: 'System',
+      items: [{ to: '/notifications', label: 'Notifications', icon: Bell }],
     },
   ],
 };
@@ -236,6 +249,7 @@ const CRUMBS: Record<string, { label: string; to?: string }[]> = {
   '/alumni/profile': [{ label: 'Alumni', to: '/alumni' }, { label: 'Profile' }],
   '/alumni/career': [{ label: 'Alumni', to: '/alumni' }, { label: 'Career History' }],
   '/alumni/feedback': [{ label: 'Alumni', to: '/alumni' }, { label: 'Feedback' }],
+  '/notifications': [{ label: 'Notifications' }],
 };
 
 function crumbsFor(pathname: string) {
@@ -375,11 +389,7 @@ export default function AppLayout() {
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
             {panel === 'admin' && <GlobalSearch onSearch={(q) => navigate(`/admin/students?search=${encodeURIComponent(q)}`)} />}
-            <ActionMenu
-              a11yLabel="Notifications"
-              trigger={<Bell className="h-4 w-4" />}
-              items={[{ label: 'No new notifications', disabled: true }]}
-            />
+            <NotificationBell />
             <div className="ml-1 flex shrink-0 items-center gap-2 border-l border-border pl-2">
               <ActionMenu
                 a11yLabel="Account menu"
